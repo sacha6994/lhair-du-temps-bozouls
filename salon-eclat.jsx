@@ -729,74 +729,175 @@ function About({ t }) {
 // ═══════════════════════════════════════════
 // SERVICES
 // ═══════════════════════════════════════════
+function ServiceCard({ s, t, featured }) {
+  const [hov, setHov] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onClick={() => setExpanded(!expanded)}
+      style={{
+        background: featured
+          ? `linear-gradient(135deg, ${t.surface}, ${t.oak}08)`
+          : t.surface,
+        borderRadius: 28, padding: featured ? "44px 36px" : "36px 30px",
+        border: `1px solid ${hov ? t.gold + "30" : t.oak + "12"}`,
+        cursor: "pointer", position: "relative", overflow: "hidden",
+        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
+        transform: hov ? "translateY(-6px)" : "",
+        boxShadow: hov
+          ? `0 25px 60px ${t.shadow}, 0 0 40px ${t.ledGlow}12`
+          : `0 2px 20px ${t.shadow}`,
+        height: "100%",
+        display: "flex", flexDirection: "column",
+      }}
+    >
+      {/* Animated top LED line */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 2,
+        background: `linear-gradient(90deg, transparent 20%, ${t.ledCore}, transparent 80%)`,
+        boxShadow: `0 0 20px ${t.ledGlow}`,
+        opacity: hov ? 1 : 0, transition: "opacity 0.5s",
+      }}/>
+
+      {/* Decorative corner accent */}
+      <div style={{
+        position: "absolute", top: -1, right: -1,
+        width: 80, height: 80,
+        background: `linear-gradient(225deg, ${t.gold}12, transparent 60%)`,
+        borderRadius: "0 28px 0 0",
+        pointerEvents: "none",
+      }}/>
+
+      {/* Number badge */}
+      <div style={{
+        position: "absolute", top: 20, right: 20,
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: featured ? 72 : 56,
+        fontWeight: 300,
+        lineHeight: 1,
+        color: hov ? `${t.gold}18` : `${t.oak}08`,
+        transition: "color 0.5s",
+        pointerEvents: "none",
+      }}>{s.num}</div>
+
+      {/* Icon */}
+      <div style={{
+        width: featured ? 64 : 52, height: featured ? 64 : 52, borderRadius: 18,
+        background: `linear-gradient(135deg, ${t.cognac}18, ${t.gold}10)`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: t.cognac, marginBottom: 24,
+        boxShadow: hov ? `0 0 30px ${t.ledGlow}25` : "none",
+        transition: "box-shadow 0.4s, transform 0.4s",
+        transform: hov ? "rotate(-5deg) scale(1.05)" : "",
+        fontSize: featured ? 22 : 18,
+      }}>{s.icon}</div>
+
+      <h3 style={{
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: featured ? 28 : 23, fontWeight: 500,
+        color: t.text, margin: "0 0 12px",
+      }}>{s.title}</h3>
+
+      <p style={{
+        fontFamily: "'DM Sans', sans-serif", fontSize: 14,
+        color: t.textMuted, lineHeight: 1.75, margin: "0 0 20px",
+        flex: 1,
+      }}>{s.desc}</p>
+
+      {/* Tags — slide in on hover/click */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20,
+        maxHeight: expanded || hov ? 100 : 0,
+        opacity: expanded || hov ? 1 : 0,
+        overflow: "hidden",
+        transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
+      }}>
+        {s.tags.map((tag, j) => (
+          <span key={j} style={{
+            fontFamily: "'DM Sans', sans-serif", fontSize: 11.5,
+            color: t.oakDark,
+            background: `${t.oak}10`,
+            padding: "5px 14px", borderRadius: 20,
+            border: `1px solid ${t.oak}08`,
+            transform: hov ? "translateY(0)" : "translateY(8px)",
+            transition: `all 0.3s ${j * 0.05}s cubic-bezier(0.22,1,0.36,1)`,
+          }}>{tag}</span>
+        ))}
+      </div>
+
+      {/* Price + separator */}
+      <div style={{
+        borderTop: `1px solid ${t.oak}10`,
+        paddingTop: 16,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{
+          fontFamily: "'Cormorant Garamond', serif",
+          fontSize: featured ? 22 : 19, fontWeight: 600, color: t.cognac,
+          textShadow: hov ? `0 0 20px ${t.ledGlow}30` : "none",
+          transition: "text-shadow 0.4s",
+        }}>{s.price}</div>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif", fontSize: 11,
+          color: t.textLight, letterSpacing: "0.08em",
+          opacity: hov ? 1 : 0,
+          transform: hov ? "translateX(0)" : "translateX(-8px)",
+          transition: "all 0.3s",
+        }}>Voir détails →</div>
+      </div>
+    </div>
+  );
+}
+
 function Services({ t }) {
-  const [hov, setHov] = useState(null);
   const services = [
-    { icon: I.scissors, title: "Coupe & Coiffage", desc: "Coupes sur-mesure, adaptées à votre morphologie et votre style de vie.", price: "À partir de 35€", tags: ["Coupe femme", "Coupe homme", "Brushing"] },
-    { icon: I.brush, title: "Coloration", desc: "Techniques de pointe — balayage, ombré, couleur complète — avec des produits respectueux.", price: "À partir de 55€", tags: ["Balayage", "Mèches", "Patine"] },
-    { icon: I.sparkle, title: "Soins Capillaires", desc: "Rituels de soins profonds pour nourrir, réparer et sublimer votre chevelure.", price: "À partir de 25€", tags: ["Kératine", "Botox capillaire", "Masque"] },
-    { icon: I.leaf, title: "Cérémonies", desc: "Coiffures événementielles pour mariages, galas et moments d'exception.", price: "Sur devis", tags: ["Mariage", "Chignon", "Tresses"] },
+    { num: "01", icon: I.scissors, title: "Coupe & Coiffage", desc: "Coupes sur-mesure, adaptées à votre morphologie et votre style de vie.", price: "À partir de 35€", tags: ["Coupe femme", "Coupe homme", "Brushing"], featured: true },
+    { num: "02", icon: I.brush, title: "Coloration", desc: "Techniques de pointe — balayage, ombré, couleur complète — avec des produits respectueux.", price: "À partir de 55€", tags: ["Balayage", "Mèches", "Patine"], featured: false },
+    { num: "03", icon: I.sparkle, title: "Soins Capillaires", desc: "Rituels de soins profonds pour nourrir, réparer et sublimer votre chevelure.", price: "À partir de 25€", tags: ["Kératine", "Botox capillaire", "Masque"], featured: false },
+    { num: "04", icon: I.leaf, title: "Cérémonies", desc: "Coiffures événementielles pour mariages, galas et moments d'exception.", price: "Sur devis", tags: ["Mariage", "Chignon", "Tresses"], featured: true },
   ];
 
   return (
     <section id="prestations" style={{ padding: "130px 24px", position: "relative", background: t.bgCard }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <Reveal>
-          <div style={{ textAlign: "center", marginBottom: 72 }}>
+          <div style={{ textAlign: "center", marginBottom: 80 }}>
             <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: t.cognac, letterSpacing: "0.2em", textTransform: "uppercase" }}>Nos prestations</span>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 400, color: t.text, margin: "16px 0 0" }}>
               Des soins pensés pour <GlowText t={t}>vous</GlowText>
             </h2>
           </div>
         </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-          {services.map((s, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div
-                onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}
-                style={{
-                  background: t.surface, borderRadius: 24, padding: "36px 32px",
-                  border: `1px solid ${hov === i ? t.oak + "50" : t.oak + "12"}`,
-                  cursor: "pointer", position: "relative", overflow: "hidden",
-                  transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
-                  transform: hov === i ? "translateY(-8px)" : "",
-                  boxShadow: hov === i ? `0 20px 60px ${t.shadow}, 0 0 40px ${t.ledGlow}15` : `0 2px 20px ${t.shadow}`,
-                }}
-              >
-                <div style={{
-                  position: "absolute", top: 0, left: 24, right: 24, height: 2,
-                  background: `linear-gradient(90deg, transparent, ${t.ledCore}, transparent)`,
-                  boxShadow: `0 0 15px ${t.ledGlow}`,
-                  opacity: hov === i ? 1 : 0, transition: "opacity 0.5s",
-                }}/>
-                <div style={{
-                  position: "absolute", top: -40, right: -40, width: 120, height: 120,
-                  borderRadius: "50%",
-                  background: `radial-gradient(circle, ${t.ledGlow}20, transparent)`,
-                  opacity: hov === i ? 1 : 0, transition: "opacity 0.5s",
-                }}/>
-                <div style={{
-                  width: 54, height: 54, borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${t.oak}18, ${t.gold}12)`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: t.cognac, marginBottom: 24,
-                  boxShadow: hov === i ? `0 0 25px ${t.ledGlow}30` : "none",
-                  transition: "box-shadow 0.4s",
-                }}>{s.icon}</div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 500, color: t.text, margin: "0 0 12px" }}>{s.title}</h3>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: t.textMuted, lineHeight: 1.7, margin: "0 0 20px" }}>{s.desc}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
-                  {s.tags.map((tag, j) => (
-                    <span key={j} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: t.oakDark, background: `${t.oak}10`, padding: "5px 14px", borderRadius: 20 }}>{tag}</span>
-                  ))}
-                </div>
-                <div style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 600, color: t.cognac,
-                  textShadow: hov === i ? `0 0 20px ${t.ledGlow}40` : "none", transition: "text-shadow 0.4s",
-                }}>{s.price}</div>
-              </div>
-            </Reveal>
-          ))}
+
+        {/* Bento grid — asymmetric layout */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1.3fr 1fr",
+          gridTemplateRows: "auto auto",
+          gap: 20,
+        }} className="services-bento">
+          {/* Card 1 — large left */}
+          <Reveal delay={0}>
+            <div style={{ gridRow: "1 / 2" }}>
+              <ServiceCard s={services[0]} t={t} featured={true}/>
+            </div>
+          </Reveal>
+          {/* Card 2 — top right */}
+          <Reveal delay={0.1}>
+            <ServiceCard s={services[1]} t={t} featured={false}/>
+          </Reveal>
+          {/* Card 3 — bottom left */}
+          <Reveal delay={0.2}>
+            <ServiceCard s={services[2]} t={t} featured={false}/>
+          </Reveal>
+          {/* Card 4 — large right */}
+          <Reveal delay={0.3}>
+            <div style={{ gridRow: "2 / 3" }}>
+              <ServiceCard s={services[3]} t={t} featured={true}/>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -1138,15 +1239,6 @@ function Testimonials({ t }) {
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(true);
-
-  useEffect(() => {
-    if (!isAutoPlay) return;
-    const timer = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % reviews.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [isAutoPlay, reviews.length]);
 
   return (
     <section id="avis" style={{
@@ -1178,8 +1270,6 @@ function Testimonials({ t }) {
         {/* Featured testimonial — large center card */}
         <Reveal delay={0.1}>
           <div
-            onMouseEnter={() => setIsAutoPlay(false)}
-            onMouseLeave={() => setIsAutoPlay(true)}
             style={{
               maxWidth: 680,
               margin: "0 auto 60px",
@@ -1280,7 +1370,7 @@ function Testimonials({ t }) {
             {reviews.map((_, i) => (
               <button
                 key={i}
-                onClick={() => { setActiveIndex(i); setIsAutoPlay(false); setTimeout(() => setIsAutoPlay(true), 8000); }}
+                onClick={() => setActiveIndex(i)}
                 style={{
                   width: i === activeIndex ? 32 : 10,
                   height: 10,
@@ -1413,6 +1503,103 @@ function Contact({ t }) {
 }
 
 // ═══════════════════════════════════════════
+// WATER DROP INTRO ANIMATION
+// ═══════════════════════════════════════════
+function WaterDropIntro({ t }) {
+  const [phase, setPhase] = useState("drop"); // "drop" → "ripple" → "done"
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("ripple"), 600);
+    const t2 = setTimeout(() => setPhase("fade"), 2600);
+    const t3 = setTimeout(() => setVisible(false), 3200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: t.bg,
+      opacity: phase === "fade" ? 0 : 1,
+      transition: "opacity 0.6s ease-out",
+      pointerEvents: phase === "fade" ? "none" : "auto",
+    }}>
+      {/* Water drop */}
+      <div style={{
+        position: "absolute",
+        top: phase === "drop" ? "-80px" : "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        transition: "top 0.5s cubic-bezier(0.55, 0, 1, 0.45)",
+      }}>
+        <div style={{
+          width: 16, height: 22,
+          background: `linear-gradient(180deg, ${t.gold}cc, ${t.cognac || t.gold}aa)`,
+          borderRadius: "50% 50% 50% 50% / 30% 30% 70% 70%",
+          boxShadow: `0 0 20px ${t.gold}60, 0 0 40px ${t.gold}30`,
+          opacity: phase === "drop" ? 1 : 0,
+          transition: "opacity 0.2s",
+        }}/>
+      </div>
+
+      {/* Ripple rings */}
+      {phase !== "drop" && [0, 1, 2, 3].map(i => (
+        <div key={i} style={{
+          position: "absolute",
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 20, height: 20,
+          borderRadius: "50%",
+          border: `${i === 0 ? 2 : 1}px solid ${t.gold}`,
+          opacity: 0,
+          animation: `rippleExpand 2s ${i * 0.25}s ease-out forwards`,
+          pointerEvents: "none",
+        }}/>
+      ))}
+
+      {/* Central flash */}
+      {phase !== "drop" && (
+        <div style={{
+          position: "absolute",
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 8, height: 8,
+          borderRadius: "50%",
+          background: t.gold,
+          boxShadow: `0 0 30px ${t.gold}, 0 0 60px ${t.gold}80, 0 0 100px ${t.gold}40`,
+          animation: "rippleDot 0.8s ease-out forwards",
+        }}/>
+      )}
+
+      {/* Salon name fades in after impact */}
+      {phase !== "drop" && (
+        <div style={{
+          position: "absolute",
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          animation: "nameReveal 1.2s 0.4s ease-out forwards",
+          opacity: 0,
+        }}>
+          <span style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "clamp(28px, 5vw, 48px)",
+            fontWeight: 400,
+            color: t.text,
+            letterSpacing: "0.06em",
+          }}>
+            L'Hair du Temps
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
 // FOOTER
 // ═══════════════════════════════════════════
 function Footer({ t }) {
@@ -1479,6 +1666,18 @@ export default function SalonEclat() {
           to { transform: scaleY(1); opacity: 1; }
         }
         @keyframes iconSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rippleExpand {
+          0% { width: 20px; height: 12px; opacity: 0.8; border-radius: 50%; }
+          100% { width: 85vw; height: 45vw; opacity: 0; border-radius: 50%; }
+        }
+        @keyframes rippleDot {
+          0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+        @keyframes nameReveal {
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); filter: blur(8px); }
+          100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+        }
         @keyframes testimonialScroll {
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.333%); }
@@ -1489,6 +1688,7 @@ export default function SalonEclat() {
           .mobile-menu-btn { display: block !important; }
           .about-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
           .gallery-showcase { flex-direction: column !important; align-items: center !important; padding: 20px 24px 60px !important; }
+          .services-bento { grid-template-columns: 1fr !important; }
           .hero-deco-1, .hero-deco-2, .hero-slats { display: none !important; }
         }
         @media (min-width: 769px) { .mobile-menu-btn { display: none !important; } }
@@ -1500,6 +1700,7 @@ export default function SalonEclat() {
         }
       `}</style>
 
+      <WaterDropIntro t={t}/>
       <CursorGlow t={t}/>
       <ThemeToggle dark={dark} toggle={() => setDark(!dark)} t={t}/>
       <Navbar t={t}/>
