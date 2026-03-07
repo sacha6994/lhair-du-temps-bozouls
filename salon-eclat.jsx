@@ -478,27 +478,116 @@ function CursorGlow({ t }) {
 }
 
 // ═══════════════════════════════════════════
+// CLICK WATER RIPPLES — drop effect anywhere
+// ═══════════════════════════════════════════
+function ClickRipples({ t }) {
+  const [ripples, setRipples] = useState([]);
+  const idRef = useRef(0);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const id = idRef.current++;
+      const x = e.clientX;
+      const y = e.clientY + window.scrollY;
+      setRipples(prev => [...prev, { id, x, y }]);
+      setTimeout(() => {
+        setRipples(prev => prev.filter(r => r.id !== id));
+      }, 2800);
+    };
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 60 }}>
+      {ripples.map(r => (
+        <div key={r.id} style={{ position: "absolute", left: r.x, top: r.y }}>
+          {/* Drop */}
+          <div style={{
+            position: "absolute",
+            left: -4, top: -40,
+            width: 8, height: 14,
+            background: `linear-gradient(180deg, ${t.gold}99, ${t.gold}44)`,
+            borderRadius: "50% 50% 50% 50% / 30% 30% 70% 70%",
+            animation: "clickDrop 0.3s ease-in forwards",
+            boxShadow: `0 0 8px ${t.gold}40`,
+          }}/>
+          {/* Ripple rings */}
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{
+              position: "absolute",
+              left: 0, top: 0,
+              width: 4, height: 2,
+              borderRadius: "50%",
+              border: `${i === 0 ? 1.5 : 1}px solid ${t.gold}`,
+              transform: "translate(-50%, -50%)",
+              opacity: 0,
+              animation: `clickRippleRing 2.2s ${0.3 + i * 0.2}s ease-out forwards`,
+            }}/>
+          ))}
+          {/* Impact dot */}
+          <div style={{
+            position: "absolute",
+            left: -3, top: -3,
+            width: 6, height: 6,
+            borderRadius: "50%",
+            background: t.gold,
+            opacity: 0,
+            animation: "clickImpact 0.4s 0.28s ease-out forwards",
+            boxShadow: `0 0 12px ${t.gold}80`,
+          }}/>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
 // THEME TOGGLE
 // ═══════════════════════════════════════════
 function ThemeToggle({ dark, toggle, t }) {
   const [hover, setHover] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
+  const handleClick = () => {
+    setAnimating(true);
+    toggle();
+    setTimeout(() => setAnimating(false), 700);
+  };
+
   return (
-    <button onClick={toggle} aria-label="Toggle theme"
+    <button onClick={handleClick} aria-label="Toggle theme"
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        position: "fixed", bottom: 28, right: 28, zIndex: 100,
-        width: 52, height: 52, borderRadius: "50%",
+        position: "fixed", top: "50%", right: 20, zIndex: 100,
+        width: 48, height: 48, borderRadius: "50%",
         background: t.surface, border: `1.5px solid ${t.oak}25`,
         boxShadow: hover
           ? `0 8px 30px ${t.shadow}, 0 0 50px ${t.ledGlow}50`
           : `0 4px 20px ${t.shadow}, 0 0 30px ${t.ledGlow}30`,
         display: "flex", alignItems: "center", justifyContent: "center",
         cursor: "pointer", color: t.gold,
-        transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
-        transform: hover ? "scale(1.1) rotate(15deg)" : "scale(1)",
+        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
+        transform: `translateY(-50%) ${hover ? "scale(1.15)" : "scale(1)"} ${animating ? "rotate(360deg)" : "rotate(0deg)"}`,
       }}
     >
-      {dark ? I.sun : I.moon}
+      <div style={{
+        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
+        transform: animating ? "scale(0)" : "scale(1)",
+        opacity: animating ? 0 : 1,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {dark ? I.sun : I.moon}
+      </div>
+      {/* Burst ring on click */}
+      {animating && (
+        <div style={{
+          position: "absolute", inset: -4,
+          borderRadius: "50%",
+          border: `2px solid ${t.gold}`,
+          animation: "toggleBurst 0.7s ease-out forwards",
+        }}/>
+      )}
     </button>
   );
 }
@@ -1117,118 +1206,8 @@ function Gallery({ t }) {
 }
 
 // ═══════════════════════════════════════════
-// TESTIMONIALS — Infinite marquee with glassmorphism
+// TESTIMONIALS — Carousel with marquee
 // ═══════════════════════════════════════════
-function TestimonialCard({ review, t, direction }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        flex: "0 0 380px",
-        background: hov
-          ? `linear-gradient(135deg, ${t.bgCard}ee, ${t.oak}15)`
-          : `${t.bgCard}cc`,
-        backdropFilter: "blur(20px) saturate(150%)",
-        borderRadius: 28,
-        padding: "36px 30px 32px",
-        border: `1px solid ${hov ? t.gold + "35" : t.oak + "12"}`,
-        position: "relative",
-        overflow: "hidden",
-        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
-        boxShadow: hov
-          ? `0 20px 60px ${t.shadow}, 0 0 30px ${t.ledGlow}15, inset 0 1px 0 ${t.gold}15`
-          : `0 4px 20px ${t.shadow}`,
-        transform: hov ? "translateY(-8px) scale(1.02)" : "translateY(0) scale(1)",
-        cursor: "default",
-      }}
-    >
-      {/* Decorative gradient orb */}
-      <div style={{
-        position: "absolute", top: -30, right: -30,
-        width: 120, height: 120, borderRadius: "50%",
-        background: `radial-gradient(circle, ${t.gold}15, transparent 70%)`,
-        filter: "blur(20px)",
-        opacity: hov ? 1 : 0.3,
-        transition: "opacity 0.5s",
-        pointerEvents: "none",
-      }}/>
-
-      {/* Quote mark with LED glow */}
-      <div style={{
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 64, lineHeight: 1,
-        position: "absolute", top: 4, right: 24,
-        background: `linear-gradient(135deg, ${t.gold}, ${t.cognac})`,
-        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-        opacity: hov ? 0.6 : 0.15,
-        transition: "opacity 0.5s",
-        filter: hov ? `drop-shadow(0 0 12px ${t.ledGlow})` : "none",
-      }}>"</div>
-
-      {/* Star rating with staggered animation */}
-      <div style={{ display: "flex", gap: 3, marginBottom: 20, position: "relative" }}>
-        {Array.from({ length: 5 }, (_, j) => (
-          <span key={j} style={{
-            color: t.gold,
-            filter: hov ? `drop-shadow(0 0 6px ${t.ledGlow}50)` : `drop-shadow(0 0 2px ${t.ledGlow}20)`,
-            transition: `all 0.3s ${j * 0.06}s`,
-            transform: hov ? "scale(1.15)" : "scale(1)",
-          }}>{I.star}</span>
-        ))}
-      </div>
-
-      {/* Review text */}
-      <p style={{
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: 15, color: t.textMuted,
-        lineHeight: 1.82, margin: "0 0 28px",
-        fontStyle: "italic",
-        position: "relative",
-      }}>
-        {review.text}
-      </p>
-
-      {/* Divider line */}
-      <div style={{
-        width: hov ? 60 : 30, height: 1,
-        background: `linear-gradient(90deg, ${t.gold}, ${t.cognac})`,
-        marginBottom: 20,
-        transition: "width 0.5s cubic-bezier(0.22,1,0.36,1)",
-        boxShadow: `0 0 8px ${t.ledGlow}30`,
-      }}/>
-
-      {/* Author info */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: "50%",
-          background: `linear-gradient(135deg, ${t.cognac}, ${t.gold})`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 17, fontWeight: 600, color: "#fff",
-          boxShadow: `0 0 20px ${t.ledGlow}25`,
-          transition: "box-shadow 0.4s",
-        }}>
-          {review.name[0]}
-        </div>
-        <div>
-          <span style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 14, fontWeight: 600, color: t.text,
-            display: "block",
-          }}>{review.name}</span>
-          <span style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 11, color: t.textLight,
-            letterSpacing: "0.05em",
-          }}>Cliente fidèle</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Testimonials({ t }) {
   const reviews = [
     { name: "Camille L.", text: "Un salon magnifique avec une ambiance incroyable. Le résultat est toujours au-delà de mes attentes. Je recommande les yeux fermés !" },
@@ -1307,10 +1286,10 @@ function Testimonials({ t }) {
                   <div style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: 100, lineHeight: 0.8,
-                    background: `linear-gradient(135deg, ${t.gold}40, ${t.cognac}20)`,
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                    color: t.gold,
+                    opacity: 0.25,
                     marginBottom: 8,
-                    filter: `drop-shadow(0 0 20px ${t.ledGlow}30)`,
+                    filter: `drop-shadow(0 0 20px ${t.ledGlow})`,
                   }}>"</div>
 
                   <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 24 }}>
@@ -1666,6 +1645,23 @@ export default function SalonEclat() {
           to { transform: scaleY(1); opacity: 1; }
         }
         @keyframes iconSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes toggleBurst {
+          0% { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes clickDrop {
+          0% { transform: translateY(0); opacity: 1; }
+          80% { opacity: 1; }
+          100% { transform: translateY(40px); opacity: 0; }
+        }
+        @keyframes clickRippleRing {
+          0% { width: 4px; height: 2px; opacity: 0.7; transform: translate(-50%, -50%); }
+          100% { width: 180px; height: 90px; opacity: 0; transform: translate(-50%, -50%); }
+        }
+        @keyframes clickImpact {
+          0% { opacity: 0.9; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0); }
+        }
         @keyframes rippleExpand {
           0% { width: 20px; height: 12px; opacity: 0.8; border-radius: 50%; }
           100% { width: 85vw; height: 45vw; opacity: 0; border-radius: 50%; }
@@ -1701,6 +1697,7 @@ export default function SalonEclat() {
       `}</style>
 
       <WaterDropIntro t={t}/>
+      <ClickRipples t={t}/>
       <CursorGlow t={t}/>
       <ThemeToggle dark={dark} toggle={() => setDark(!dark)} t={t}/>
       <Navbar t={t}/>
