@@ -543,20 +543,63 @@ function ClickRipples({ t }) {
 }
 
 // ═══════════════════════════════════════════
+// THEME WAVE — water curtain transition
+// ═══════════════════════════════════════════
+function ThemeWave({ active, targetDark }) {
+  const target = targetDark ? THEMES.dark : THEMES.light;
+  if (!active) return null;
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9998, pointerEvents: "none",
+      overflow: "hidden",
+    }}>
+      {/* Main wave curtain */}
+      <div style={{
+        position: "absolute",
+        top: "-10%", left: 0, right: 0,
+        height: "120%",
+        background: `linear-gradient(180deg,
+          transparent 0%,
+          ${target.bg}40 15%,
+          ${target.bg}bb 30%,
+          ${target.bg} 45%,
+          ${target.bg} 55%,
+          ${target.bg}bb 70%,
+          ${target.bg}40 85%,
+          transparent 100%
+        )`,
+        animation: "themeWaveSweep 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+      }}>
+        {/* Water highlight line at leading edge */}
+        <div style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0,
+          height: 3,
+          background: `linear-gradient(90deg, transparent, ${target.gold}80, transparent)`,
+          boxShadow: `0 0 20px ${target.gold}60, 0 0 60px ${target.gold}30`,
+          filter: "blur(1px)",
+        }}/>
+        {/* Secondary ripple shimmer */}
+        <div style={{
+          position: "absolute",
+          top: "8%", left: 0, right: 0,
+          height: 1,
+          background: `linear-gradient(90deg, transparent 10%, ${target.gold}40, transparent 90%)`,
+          boxShadow: `0 0 15px ${target.gold}30`,
+        }}/>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
 // THEME TOGGLE
 // ═══════════════════════════════════════════
-function ThemeToggle({ dark, toggle, t }) {
+function ThemeToggle({ dark, onToggle, t }) {
   const [hover, setHover] = useState(false);
-  const [animating, setAnimating] = useState(false);
-
-  const handleClick = () => {
-    setAnimating(true);
-    toggle();
-    setTimeout(() => setAnimating(false), 700);
-  };
 
   return (
-    <button onClick={handleClick} aria-label="Toggle theme"
+    <button onClick={onToggle} aria-label="Toggle theme"
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
         position: "fixed", top: "50%", right: 20, zIndex: 100,
@@ -567,27 +610,17 @@ function ThemeToggle({ dark, toggle, t }) {
           : `0 4px 20px ${t.shadow}, 0 0 30px ${t.ledGlow}30`,
         display: "flex", alignItems: "center", justifyContent: "center",
         cursor: "pointer", color: t.gold,
-        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
-        transform: `translateY(-50%) ${hover ? "scale(1.15)" : "scale(1)"} ${animating ? "rotate(360deg)" : "rotate(0deg)"}`,
+        transition: "background 0.6s, border-color 0.6s, box-shadow 0.6s, color 0.6s, transform 0.4s",
+        transform: `translateY(-50%) ${hover ? "scale(1.15)" : "scale(1)"}`,
       }}
     >
       <div style={{
-        transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)",
-        transform: animating ? "scale(0)" : "scale(1)",
-        opacity: animating ? 0 : 1,
         display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+        transform: hover ? "rotate(20deg)" : "rotate(0deg)",
       }}>
         {dark ? I.sun : I.moon}
       </div>
-      {/* Burst ring on click */}
-      {animating && (
-        <div style={{
-          position: "absolute", inset: -4,
-          borderRadius: "50%",
-          border: `2px solid ${t.gold}`,
-          animation: "toggleBurst 0.7s ease-out forwards",
-        }}/>
-      )}
     </button>
   );
 }
@@ -1605,15 +1638,30 @@ function Footer({ t }) {
 // ═══════════════════════════════════════════
 export default function SalonEclat() {
   const [dark, setDark] = useState(false);
+  const [waveActive, setWaveActive] = useState(false);
+  const [waveTarget, setWaveTarget] = useState(false);
   const t = dark ? THEMES.dark : THEMES.light;
 
+  const handleThemeToggle = () => {
+    const next = !dark;
+    setWaveTarget(next);
+    setWaveActive(true);
+    // Switch theme when wave reaches middle of screen
+    setTimeout(() => setDark(next), 500);
+    // Remove wave after animation completes
+    setTimeout(() => setWaveActive(false), 1500);
+  };
+
   return (
-    <div style={{ background: t.bg, minHeight: "100vh", transition: "background 0.6s ease" }}>
+    <div className={waveActive ? "theme-transitioning" : ""} style={{ background: t.bg, minHeight: "100vh", transition: "background 0.8s ease 0.3s" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body { overflow-x: hidden; }
+        .theme-transitioning *, .theme-transitioning *::before, .theme-transitioning *::after {
+          transition: color 0.8s ease, background-color 0.8s ease, background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease, fill 0.8s ease, stroke 0.8s ease !important;
+        }
 
         @property --led-angle {
           syntax: '<angle>';
@@ -1645,9 +1693,9 @@ export default function SalonEclat() {
           to { transform: scaleY(1); opacity: 1; }
         }
         @keyframes iconSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes toggleBurst {
-          0% { transform: scale(1); opacity: 0.8; }
-          100% { transform: scale(2.5); opacity: 0; }
+        @keyframes themeWaveSweep {
+          0% { transform: translateY(-120%); }
+          100% { transform: translateY(120%); }
         }
         @keyframes clickDrop {
           0% { transform: translateY(0); opacity: 1; }
@@ -1699,7 +1747,8 @@ export default function SalonEclat() {
       <WaterDropIntro t={t}/>
       <ClickRipples t={t}/>
       <CursorGlow t={t}/>
-      <ThemeToggle dark={dark} toggle={() => setDark(!dark)} t={t}/>
+      <ThemeWave active={waveActive} targetDark={waveTarget}/>
+      <ThemeToggle dark={dark} onToggle={handleThemeToggle} t={t}/>
       <Navbar t={t}/>
       <Hero t={t}/>
       <About t={t}/>
