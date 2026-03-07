@@ -553,41 +553,21 @@ function ThemeWave({ active, targetDark }) {
       position: "fixed", inset: 0, zIndex: 9998, pointerEvents: "none",
       overflow: "hidden",
     }}>
-      {/* Main wave curtain */}
       <div style={{
         position: "absolute",
         top: "-10%", left: 0, right: 0,
         height: "120%",
         background: `linear-gradient(180deg,
           transparent 0%,
-          ${target.bg}40 15%,
-          ${target.bg}bb 30%,
-          ${target.bg} 45%,
-          ${target.bg} 55%,
-          ${target.bg}bb 70%,
-          ${target.bg}40 85%,
+          ${target.bg}18 25%,
+          ${target.bg}35 42%,
+          ${target.bg}45 50%,
+          ${target.bg}35 58%,
+          ${target.bg}18 75%,
           transparent 100%
         )`,
-        animation: "themeWaveSweep 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-      }}>
-        {/* Water highlight line at leading edge */}
-        <div style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0,
-          height: 3,
-          background: `linear-gradient(90deg, transparent, ${target.gold}80, transparent)`,
-          boxShadow: `0 0 20px ${target.gold}60, 0 0 60px ${target.gold}30`,
-          filter: "blur(1px)",
-        }}/>
-        {/* Secondary ripple shimmer */}
-        <div style={{
-          position: "absolute",
-          top: "8%", left: 0, right: 0,
-          height: 1,
-          background: `linear-gradient(90deg, transparent 10%, ${target.gold}40, transparent 90%)`,
-          boxShadow: `0 0 15px ${target.gold}30`,
-        }}/>
-      </div>
+        animation: "themeWaveSweep 1.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards",
+      }}/>
     </div>
   );
 }
@@ -1647,9 +1627,8 @@ export default function SalonEclat() {
     setWaveTarget(next);
     setWaveActive(true);
     // Switch theme when wave reaches middle of screen
-    setTimeout(() => setDark(next), 500);
-    // Remove wave after animation completes
-    setTimeout(() => setWaveActive(false), 1500);
+    setTimeout(() => setDark(next), 650);
+    setTimeout(() => setWaveActive(false), 1900);
   };
 
   return (
