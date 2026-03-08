@@ -1,3 +1,4 @@
+import { supabase } from "./src/supabaseClient.js";
 import { useState, useEffect, useRef } from "react";
 
 // ═══════════════════════════════════════════
@@ -953,13 +954,40 @@ function ServiceCard({ s, t, featured }) {
   );
 }
 
+const ICON_MAP = { scissors: I.scissors, brush: I.brush, sparkle: I.sparkle, leaf: I.leaf };
+
+const DEFAULT_SERVICES = [
+  { num: "01", icon_name: "scissors", title: "Coupe & Coiffage", description: "Coupes sur-mesure, adaptées à votre morphologie et votre style de vie.", price: "À partir de 35€", tags: ["Coupe femme", "Coupe homme", "Brushing"], featured: true },
+  { num: "02", icon_name: "brush", title: "Coloration", description: "Techniques de pointe — balayage, ombré, couleur complète — avec des produits respectueux.", price: "À partir de 55€", tags: ["Balayage", "Mèches", "Patine"], featured: false },
+  { num: "03", icon_name: "sparkle", title: "Soins Capillaires", description: "Rituels de soins profonds pour nourrir, réparer et sublimer votre chevelure.", price: "À partir de 25€", tags: ["Kératine", "Botox capillaire", "Masque"], featured: false },
+  { num: "04", icon_name: "leaf", title: "Cérémonies", description: "Coiffures événementielles pour mariages, galas et moments d'exception.", price: "Sur devis", tags: ["Mariage", "Chignon", "Tresses"], featured: true },
+];
+
+const DEFAULT_REVIEWS = [
+  { name: "Camille L.", text: "Un salon magnifique avec une ambiance incroyable. Le résultat est toujours au-delà de mes attentes. Je recommande les yeux fermés !" },
+  { name: "Sophie M.", text: "La déco est sublime et l'accueil chaleureux. Mon balayage est exactement ce que je voulais. Merci pour ce moment de détente." },
+  { name: "Juliette R.", text: "Enfin un salon qui prend le temps d'écouter ! Les soins sont exceptionnels et l'espace est pensé dans les moindres détails." },
+  { name: "Marie D.", text: "Une expérience unique à chaque visite. L'équipe est aux petits soins et le cadre est absolument magnifique. Mon salon coup de cœur !" },
+  { name: "Laura B.", text: "Le meilleur salon de la région, sans hésitation. Professionnalisme, écoute et résultat parfait. Je ne changerais pour rien au monde." },
+];
+
+function useDynamic(table, fallback) {
+  const [data, setData] = useState(fallback);
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.from(table).select("*").order("sort_order").then(({ data: rows }) => {
+      if (rows && rows.length > 0) setData(rows);
+    });
+  }, []);
+  return data;
+}
+
 function Services({ t }) {
-  const services = [
-    { num: "01", icon: I.scissors, title: "Coupe & Coiffage", desc: "Coupes sur-mesure, adaptées à votre morphologie et votre style de vie.", price: "À partir de 35€", tags: ["Coupe femme", "Coupe homme", "Brushing"], featured: true },
-    { num: "02", icon: I.brush, title: "Coloration", desc: "Techniques de pointe — balayage, ombré, couleur complète — avec des produits respectueux.", price: "À partir de 55€", tags: ["Balayage", "Mèches", "Patine"], featured: false },
-    { num: "03", icon: I.sparkle, title: "Soins Capillaires", desc: "Rituels de soins profonds pour nourrir, réparer et sublimer votre chevelure.", price: "À partir de 25€", tags: ["Kératine", "Botox capillaire", "Masque"], featured: false },
-    { num: "04", icon: I.leaf, title: "Cérémonies", desc: "Coiffures événementielles pour mariages, galas et moments d'exception.", price: "Sur devis", tags: ["Mariage", "Chignon", "Tresses"], featured: true },
-  ];
+  const dbServices = useDynamic("services", DEFAULT_SERVICES);
+  const services = dbServices.map(s => ({
+    num: s.num, icon: ICON_MAP[s.icon_name] || I.scissors, title: s.title,
+    desc: s.description, price: s.price, tags: s.tags || [], featured: s.featured,
+  }));
 
   return (
     <section id="prestations" style={{ padding: "130px 24px", position: "relative", background: t.bgCard }}>
@@ -1120,11 +1148,13 @@ function Gallery({ t }) {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  const photos = [
+  const DEFAULT_PHOTOS = [
     { src: IMG_ACCUEIL, label: "Espace d'accueil" },
     { src: IMG_MIROIRS, label: "Postes de coiffage" },
     { src: IMG_STATIONS, label: "Ambiance lumineuse" },
   ];
+  const dbPhotos = useDynamic("photos", null);
+  const photos = dbPhotos ? dbPhotos.map(p => ({ src: p.url, label: p.label })) : DEFAULT_PHOTOS;
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
@@ -1222,13 +1252,7 @@ function Gallery({ t }) {
 // TESTIMONIALS — Carousel with marquee
 // ═══════════════════════════════════════════
 function Testimonials({ t }) {
-  const reviews = [
-    { name: "Camille L.", text: "Un salon magnifique avec une ambiance incroyable. Le résultat est toujours au-delà de mes attentes. Je recommande les yeux fermés !" },
-    { name: "Sophie M.", text: "La déco est sublime et l'accueil chaleureux. Mon balayage est exactement ce que je voulais. Merci pour ce moment de détente." },
-    { name: "Juliette R.", text: "Enfin un salon qui prend le temps d'écouter ! Les soins sont exceptionnels et l'espace est pensé dans les moindres détails." },
-    { name: "Marie D.", text: "Une expérience unique à chaque visite. L'équipe est aux petits soins et le cadre est absolument magnifique. Mon salon coup de cœur !" },
-    { name: "Laura B.", text: "Le meilleur salon de la région, sans hésitation. Professionnalisme, écoute et résultat parfait. Je ne changerais pour rien au monde." },
-  ];
+  const reviews = useDynamic("testimonials", DEFAULT_REVIEWS);
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -1608,6 +1632,7 @@ function Footer({ t }) {
           onMouseEnter={e => e.currentTarget.style.color = THEMES.dark.gold}
           onMouseLeave={e => e.currentTarget.style.color = THEMES.dark.textLight}>{I.ig}</a>
         <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: THEMES.dark.textLight }}>© 2026 L'Hair du Temps — Tous droits réservés</span>
+
       </div>
     </footer>
   );
